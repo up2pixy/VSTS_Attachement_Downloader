@@ -34,7 +34,8 @@ namespace VSTS_Downloader
             Console.WriteLine($"Authorizing to VSTS...");
             try
             {
-                VssConnection connection = new VssConnection(new Uri(opts.CollectionUrl), new VssClientCredentials(false));
+                var collectionUrl = opts.CollectionUrl.ToLower().StartsWith("https://") ? opts.CollectionUrl : "https://" + opts.CollectionUrl;
+                VssConnection connection = new VssConnection(new Uri(collectionUrl), new VssClientCredentials(false));
 
                 WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
                 WorkItemQueryResult queryResults = witClient.QueryByIdAsync(opts.QueryId).Result;
