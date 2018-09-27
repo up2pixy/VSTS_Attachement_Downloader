@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 
@@ -13,8 +14,8 @@ namespace VSTS_Downloader
 {
     class Program
     {
-        private const string clientId = "{Your client id created from Azure Portal}";
-        private const string replyUri = "{Your replyUri defined in Azure Portal}";
+        private readonly string clientId = ConfigurationManager.AppSettings["ClientId"];
+        private readonly string replyUri = ConfigurationManager.AppSettings["ReplyUri"];
         private const string VSTSResourceId = "499b84ac-1321-427f-aa17-267ca6975798"; //This is the resource id for VSTS in Azure (No need to change)
 
 
@@ -85,7 +86,15 @@ namespace VSTS_Downloader
                         continue;
                     }
 
-                    foreach (var relation in workitem.Relations.Where(r => r.Rel == "AttachedFile").OrderByDescending(r => (DateTime)r.Attributes.GetValueOrDefault("authorizedDate")))
+                    foreach (var relation in workitem.Relations
+                        .Where(r => {
+                            if (r.Rel == "AttachedFile")
+                            {
+                                return string.IsNullOrEmpty(opts.Keyword) ? true : r.Attributes.GetValueOrDefault("name").ToString().Contains(opts.Keyword);
+                            }
+                            return false;
+                        })
+                        .OrderByDescending(r => (DateTime)r.Attributes.GetValueOrDefault("authorizedDate")))
                     {
                         //Get the guid from the end of the url                   
                         string attachmentId = relation.Url.ToString().Split('/').Last();
@@ -167,6 +176,13 @@ namespace VSTS_Downloader
                 Required = true,
                 HelpText = "Output folder path")]
             public string OutputFolder { get; set; }
+
+            [Option(
+                'k',
+                "keyword",
+                Default = null,
+                HelpText = "Keyword in the attachment filename")]
+            public string Keyword { get; set; }
 
             [Option(
               Default = false,
