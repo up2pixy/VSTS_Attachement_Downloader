@@ -90,7 +90,7 @@ namespace VSTS_Downloader
                         .Where(r => {
                             if (r.Rel == "AttachedFile")
                             {
-                                return string.IsNullOrEmpty(opts.Keyword) ? true : r.Attributes.GetValueOrDefault("name").ToString().Contains(opts.Keyword);
+                                return string.IsNullOrEmpty(opts.Keyword) ? true : r.Attributes.GetValueOrDefault("name").ToString().ToLower().Contains(opts.Keyword.ToLower());
                             }
                             return false;
                         })
